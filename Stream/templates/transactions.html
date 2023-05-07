@@ -1,0 +1,58 @@
+{% extends "home.html" %} {% block main %}
+
+<h3>Add Transactions</h3>
+<form method="POST">
+  {% csrf_token %}
+  <span>
+    <input
+      type="text"
+      name="emp_name"
+      id="emp_name"
+      placeholder="Employee Name"
+    />
+    <input
+      type="text"
+      name="emp_code"
+      id="emp_code"
+      placeholder="Employee Code"
+    />
+    <input
+      type="datetime-local"
+      name="punch_time"
+      id="Punch Time"
+      placeholder="Punch Time"
+    />
+  </span>
+  <button type="submit">Submit</button>
+</form>
+
+<h2>Transactions</h2>
+
+<ul id="transactions"></ul>
+
+<script>
+  var eventSource = new EventSource("{% url 'transaction_stream' %}");
+
+  eventSource.onopen = function () {
+    console.log("transaction stream opened");
+  };
+  eventSource.onmessage = function (event) {
+    console.log("transaction message", event);
+    updateTransactions(event.data);
+  };
+  eventSource.onerror = function (event) {
+    console.log("transaction error", event);
+  };
+
+  function updateTransactions(data) {
+    data = JSON.parse(data);
+    var new_transactions_ul = document.getElementById("transactions");
+    var content = "";
+    data.forEach((item) => {
+      content += `<li>${item.emp_name}- ${item.punch_time}</li>`;
+    });
+    new_transactions_ul.innerHTML = content;
+    console.log("transactions updated", data);
+  }
+</script>
+{% endblock %}
